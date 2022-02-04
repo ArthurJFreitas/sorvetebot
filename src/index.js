@@ -2,14 +2,15 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const ytdl = require('ytdl-core-discord');
 const express = require('express');
-
+const entradasJson = require('../entradas.json')
+const fs = require('fs')
 
 var app  = express();
 
 client.queues = new Map();
 
 
-const TOKEN = 'NzI3OTg5MzE0MTQyNzMyMzQ4.Xv0K5Q.ptu6gGtftURnJ6QgVnyBuS6ecXo';
+const TOKEN = 'NDg2NjkzNTU5NjcyNzY2NDg1.W48isg.v_qh8tsHgzTOCj4aCDtgrCvTqA4';
 
 client.on('ready', ()=> {
     console.log('Ligou');
@@ -197,15 +198,35 @@ const chooseTheGame = (msg) => {
 client.on('message', msg => {
     const PREFIX = '!';
     let args = msg.content.substring(PREFIX.length).split(" ");
+    const entradas = JSON.parse(fs.readFileSync('./entradas.json'))
 
-    switch (args[0]) {
+
+    switch (args[0]) {      
+        case 'entrada':
+            const url = args[1]
+            const username = msg.member.user.username
+            let entradaMudar = entradas.find((e) => e.nickname === username)
+            console.log(entradaMudar)
+
+            if (!entradaMudar) {
+                const novoObjeto = { nickname: username, entrada: url }
+                const entradasConcatenadas = [...entradas, novoObjeto]
+
+                // const entradasArquivo = JSON.parse(fs.readFileSync('./entradas.json'))
+                fs.writeFileSync('./entradas.json', JSON.stringify(entradasConcatenadas))
+                
+                
+            } else
+                entradaMudar['entrada'] = url
+            break
+
         case 'toca':
             if(!msg.member.voice.channel){
                 msg.reply('Você precisa estar em um canal de voz');
             }
-
+            
             let queue = client.queues.get(msg.member.guild.id);
-     
+            
             if(!queue){
                 const play = async () => {
                     const conn = await msg.member.voice.channel.join();
@@ -268,6 +289,45 @@ client.on('guildMemberAdd', member  => {
 });
 
 client.login(TOKEN);
+
+client.on('voiceStateUpdate', (oldMember, newMember) => {
+    if (newMember.channelID !== "812086637093191742") return
+
+    const play2 = async () => {
+        const entradas = JSON.parse(fs.readFileSync('./entradas.json'))
+
+        if (!entradas.find((e) => e.nickname == newMember.member.user.username)) return
+
+        const conn = await newMember.member.voice.channel.join();
+        queue = {
+            volume: 10,
+            connection: conn,
+            dispacher: null,
+        }
+
+        client.queues.set(newMember.member.guild.id, queue);
+        const username = newMember.member.user.username
+        let entradaEncontrada = entradas.find((e) => e.nickname === username);
+
+        let url;
+
+        if (entradaEncontrada) 
+            url = entradaEncontrada.entrada;
+
+        if (url == null) return
+
+        queue.dispacher = await queue.connection.play(await ytdl(url), 
+            {
+                type: 'opus',
+            }
+        );
+        
+        setTimeout(function() {
+            queue.connection.disconnect();
+        }, 7000);
+    }
+    play2();
+ });
 
 
 
