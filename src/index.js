@@ -206,18 +206,18 @@ client.on('message', msg => {
             const url = args[1]
             const username = msg.member.user.username
             let entradaMudar = entradas.find((e) => e.nickname === username)
-            console.log(entradaMudar)
 
             if (!entradaMudar) {
                 const novoObjeto = { nickname: username, entrada: url }
                 const entradasConcatenadas = [...entradas, novoObjeto]
 
-                // const entradasArquivo = JSON.parse(fs.readFileSync('./entradas.json'))
                 fs.writeFileSync('./entradas.json', JSON.stringify(entradasConcatenadas))
                 
                 
-            } else
+            } else {
                 entradaMudar['entrada'] = url
+                fs.writeFileSync('./entradas.json', JSON.stringify(entradas))
+            }
             break
 
         case 'toca':
