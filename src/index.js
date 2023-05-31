@@ -10,7 +10,7 @@ var app  = express();
 client.queues = new Map();
 
 
-const TOKEN = 'NDg2NjkzNTU5NjcyNzY2NDg1.W48isg.v_qh8tsHgzTOCj4aCDtgrCvTqA4';
+const TOKEN = '';
 
 client.on('ready', ()=> {
     console.log('Ligou');
@@ -268,8 +268,20 @@ client.on('message', msg => {
         msg.react('/:maniacodoparque:')
     }
 
+    const ping = (msg) => {
+        if(msg.content.startsWith('!ping')) {
+            msg.channel.send('pong')
+            return
+        }
+
+        if(msg.content.startsWith('!pong')) {
+            msg.channel.send('ping')
+            return
+        }
+    }
 
     // Funções para mensagem
+    ping(msg)
     gordoRecomendations(msg);
     monster(msg);
     callGame(msg);
